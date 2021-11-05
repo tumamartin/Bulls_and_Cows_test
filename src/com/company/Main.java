@@ -92,13 +92,25 @@ public class Main {
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+        System.out.println("Please, enter the secret code's length:");
         int secretCodeLength = scanner.nextInt();
         if (secretCodeLength > 10) {
             System.out.println("Error: can't generate a secret number with a length of " + secretCodeLength + " because there aren't enough unique digits.");
         } else {
             Grader grader = new Grader(secretCodeLength);
             grader.createSecretCode();
-            System.out.println("The random secret number is " + grader.getSecretCode() + ".");
+            int i = 1;
+            System.out.println("Okay, let's start a game!");
+            while (true) {
+                System.out.println("Turn" + i + ":");
+                int guessNumber = scanner.nextInt();
+                grader.print(grader.grade(guessNumber));
+                if (grader.grade(guessNumber)[0] == secretCodeLength) {
+                    System.out.println("Congratulations! You guessed the secret code.");
+                    break;
+                }
+                i++;
+            }
         }
     }
 }
