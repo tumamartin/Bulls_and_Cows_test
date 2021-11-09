@@ -1,69 +1,82 @@
 package com.company;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 class Grader {
-    private int[] secretCode;
+    private char[] secretCode;
     private int secretCodeLength;
 
     public Grader(int secretCodeLength) {
         this.secretCodeLength = secretCodeLength;
     }
 
-    public long getSecretCode() {
+    public String getSecretCode() {
         return createNumberfromArray(this.secretCode);
     }
 
-    private int[] createArrayFromNumber(long number) {
-        char[] numberAsCharArray = String.valueOf(number).toCharArray();
-        int[] intArray = new int[numberAsCharArray.length];
-        for (int i = 0; i < numberAsCharArray.length; i++) {
-            intArray[i] = Character.getNumericValue(numberAsCharArray[i]);
-        }
-        return intArray;
-    }
-
-    private long createNumberfromArray(int[] number) {
+    private String createNumberfromArray(char[] number) {
         StringBuilder s = new StringBuilder();
-        for (int i: number)
+        for (char i: number)
         {
             s.append(i);
         }
-        return Long.parseLong(s.toString());
+        return s.toString();
     }
 
-    private boolean isBull(int number, int index) {
-        return (number == this.secretCode[index]);
+    private boolean isBull(char character, int index) {
+        return (character == this.secretCode[index]);
     }
 
-    private boolean isCow(int number, int index, int length) {
+    private boolean isCow(char character, int index, int length) {
         for (int i = 0; i < length; i++) {
-            if (i != index && number == secretCode[i]) {
+            if (i != index && character == this.secretCode[i]) {
                 return true;
             }
         }
         return false;
     }
 
-
-    public void createSecretCode() {
-        List<Integer> randomList = new ArrayList<>(List.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9));
-        Collections.shuffle(randomList);
-        while (randomList.get(0) == 0) {
-            Collections.shuffle(randomList);
-        }
-        this.secretCode = new int[secretCodeLength];
+    private void printStars(int numberOfsymbols) {
+        System.out.print("The secret is prepared: ");
         for (int i = 0; i < secretCodeLength; i++) {
-            this.secretCode[i] = randomList.get(i);
+            System.out.print("*");
+        }
+        if (numberOfsymbols < 10) {
+            System.out.println(" (0 - " + (char) (numberOfsymbols + 48) + ").");
+        } else {
+            System.out.println(" (0 - 9, a - " + (char) (numberOfsymbols + 86) + ").");
         }
     }
 
-    public int[] grade(int guessNumber) {
+    private boolean isInSecretCode(char character) {
+        for (int i = 0; i < secretCodeLength; i++) {
+            if (secretCode[i] == character) {return true;}
+        }
+        return false;
+    }
+
+    public void createSecretCode(int numberOfsymbols) {
+        Random random = new Random();
+        this.secretCode = new char[secretCodeLength];
+        int i = 0;
+        while (i < secretCodeLength) {
+            int rn = random.nextInt(numberOfsymbols);
+            if (rn < 10) {
+                rn += 48;
+            } else {
+                rn += 87;
+            }
+            if (!isInSecretCode((char) rn)) {
+                this.secretCode[i] = (char) rn;
+                i++;
+            }
+        }
+        printStars(numberOfsymbols);
+    }
+
+    public int[] grade(String guessNumber) {
         int[] bullsCows = new int[2];
-        int[] guessNumberArray = createArrayFromNumber(guessNumber);
+        char[] guessNumberArray = guessNumber.toCharArray();
         for (int i = 0; i < guessNumberArray.length; i++) {
             if (isBull(guessNumberArray[i], i)) {
                 bullsCows[0]++;
@@ -92,25 +105,36 @@ public class Main {
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Please, enter the secret code's length:");
-        int secretCodeLength = scanner.nextInt();
-        if (secretCodeLength > 10) {
-            System.out.println("Error: can't generate a secret number with a length of " + secretCodeLength + " because there aren't enough unique digits.");
-        } else {
-            Grader grader = new Grader(secretCodeLength);
-            grader.createSecretCode();
-            int i = 1;
-            System.out.println("Okay, let's start a game!");
-            while (true) {
-                System.out.println("Turn" + i + ":");
-                int guessNumber = scanner.nextInt();
-                grader.print(grader.grade(guessNumber));
-                if (grader.grade(guessNumber)[0] == secretCodeLength) {
-                    System.out.println("Congratulations! You guessed the secret code.");
-                    break;
+        System.out.println("Input the length of the secret code:");
+        try {
+            int secretCodeLength = scanner.nextInt();
+            if (secretCodeLength > 36) {
+                System.out.println("Error: maximum number of possible symbols in the code is 36 (0-9, a-z).");
+            } else {
+                Grader grader = new Grader(secretCodeLength);
+                System.out.println("Input the number of possible symbols in the code:");
+                int numberOfSymbols = scanner.nextInt();
+                if (numberOfSymbols < secretCodeLength | secretCodeLength == 0 | numberOfSymbols > 36) {
+                    System.out.println("Error: it's not possible to generate a code with a length of " + secretCodeLength + " with " + numberOfSymbols + " unique symbols.");
+                } else {
+                    grader.createSecretCode(numberOfSymbols);
+                    int i = 1;
+                    System.out.println("Okay, let's start a game!");
+                    while (true) {
+                        System.out.println("Turn " + i + ":");
+                        String guessNumber = scanner.next();
+                        grader.print(grader.grade(guessNumber));
+                        if (grader.grade(guessNumber)[0] == secretCodeLength) {
+                            System.out.println("Congratulations! You guessed the secret code.");
+                            break;
+                        }
+                        i++;
+                    }
                 }
-                i++;
             }
+        }
+        catch (Exception ex) {
+            System.out.println("Error: You entered invalid input");
         }
     }
 }
